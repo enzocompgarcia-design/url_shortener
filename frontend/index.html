@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Encurtador de Links</title>
+
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <h1>Encurtador de Links</h1>
+
+        <p class="subtitle">
+            Transforme URLs enormes em links pequenos.
+        </p>
+
+        <form class="form" id="shorten-form">
+
+            <input
+                type="text"
+                id="long-link"
+                placeholder="Cole seu link aqui..."
+                required
+            >
+
+            <button type="submit" id="submit-button">
+                Encurtar
+            </button>
+
+        </form>
+
+        <div class="result" id="result">
+
+            <p>Seu link encurtado:</p>
+
+            <div class="result-content">
+
+                <a id="short-link" href="#" target="_blank"></a>
+
+                <button
+                    class="copy-button"
+                    id="copy-button"
+                    type="button"
+                >
+                    Copiar
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="message" id="message"></div>
+
+    </main>
+
+    <script src="./js/script.js" defer></script>
+
+</body>
+</html>
