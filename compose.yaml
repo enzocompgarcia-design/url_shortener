@@ -1,0 +1,119 @@
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: DockerFile
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - api1
+      - api2
+      - api3
+    restart: unless-stopped
+
+  api1:
+    build:
+      context: ./backend
+      dockerfile: DockerFile
+    env_file:
+      - ./backend/.env
+    environment:
+      CQLENG_ALLOW_SCHEMA_MANAGEMENT: "1" 
+    depends_on:
+      cassandra:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 512m
+
+  api2:
+      build:
+        context: ./backend
+        dockerfile: DockerFile
+      env_file:
+        - ./backend/.env
+      environment:
+        CQLENG_ALLOW_SCHEMA_MANAGEMENT: "1"
+      depends_on:
+        cassandra:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+      restart: unless-stopped
+      cpus: 1.0
+      mem_limit: 512m
+
+  api3:
+      build:
+        context: ./backend
+        dockerfile: DockerFile
+      env_file:
+        - ./backend/.env
+      environment:
+        CQLENG_ALLOW_SCHEMA_MANAGEMENT: "1"
+      depends_on:
+        cassandra:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+      restart: unless-stopped
+      cpus: 1.0
+      mem_limit: 512m
+
+  redis:
+    image: redis:7-alpine
+    expose:
+      - "6379"
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - 160mb
+      - --maxmemory-policy
+      - allkeys-lfu
+      - --requirepass
+      - "${REDIS_PASSWORD}"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 256m
+
+  cassandra:
+    image: cassandra:5.0
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: link_shortener
+      CASSANDRA_NUM_TOKENS: 16
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh 127.0.0.1 9042 -e 'DESCRIBE KEYSPACES'"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  cassandra_data:
