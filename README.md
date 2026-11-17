@@ -31,8 +31,12 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 
 ```text
 .
+├── .env.example
+├── compose.yaml
 ├── backend/
-│   ├── DockerFile
+│   ├── .env.example
+│   ├── Dockerfile
+│   ├── README.md
 │   ├── pyproject.toml
 │   ├── uv.lock
 │   ├── src/
@@ -58,12 +62,13 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │   │       ├── config.py
 │   │       └── main.py
 │   └── tests/
+│       ├── api/
+│       │   └── test_links_api.py
 │       └── unit/
-│           ├── rate_limitter.py
 │           └── test_url_validator.py
 │
 ├── frontend/
-│   ├── DockerFile
+│   ├── Dockerfile
 │   ├── index.html
 │   ├── css/
 │   │   └── style.css
@@ -72,15 +77,12 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │   └── package.json
 │
 ├── nginx/
-│   ├── default.conf
-│   └── nginx.conf
+│   └── default.conf
 │
-├── test/
-│   ├── package.json
-│   ├── read.js
-│   └── write.js
-│
-└── docker-compose.yml
+└── test/
+    ├── package.json
+    ├── read.js
+    └── write.js
 ```
 
 ## 🏗️ Architecture
@@ -116,12 +118,52 @@ A lightweight interface built with HTML, CSS, and JavaScript that allows users t
 
 Make sure you have the following installed:
 
-- Docker
-- Docker Compose
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/) (v2+)
+
+### Environment Variables
+
+Before running the project, configure the required environment variables. Example files are provided:
+
+- `.env.example` (project root): variables used by Docker Compose.
+- `backend/.env.example`: variables used by the FastAPI backend.
+
+Create your local env files from the examples:
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+```
+
+Then update the values as needed (especially secrets/passwords).
+
+#### Root `.env` (Docker Compose)
+
+| Variable | Description | Example |
+|---|---|---|
+| `REDIS_PASSWORD` | Password for the Redis container (used by `compose.yaml`) | `change_me_redis_password` |
+
+#### `backend/.env` (API)
+
+| Variable | Description | Example |
+|---|---|---|
+| `WORKER_ID` | Unique worker identifier for the API instance (integer) | `1` |
+| `CASSANDRA_HOST` | Cassandra hostname/service name | `cassandra` |
+| `CASSANDRA_PORT` | Cassandra port | `9042` |
+| `REDIS_URL` | Redis connection URL (password must match `REDIS_PASSWORD`) | `redis://:change_me_redis_password@redis:6379/0` |
+| `SECRET_KEY` | Secret/salt used for ID generation (Hashids) | `change_me_secret_key` |
+| `ALPHABET` | Alphabet used to encode generated short IDs | `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789` |
+| `NAME_CACHE_ID` | Redis key name for the ID counter | `url_shortener:id_counter` |
+| `ID_START` | Initial value for the ID counter | `1000` |
+| `ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost"]` |
+| `RATE_LIMIT_WRITE` | Rate limit for `POST /link/` (slowapi format) | `10/minute` |
+| `RATE_LIMIT_READ` | Rate limit for `GET /link/{code}` (slowapi format) | `120/minute` |
+
+> **Note:** `compose.yaml` starts multiple API instances (`api1`, `api2`, `api3`) that share the same `backend/.env`. If you need distinct worker IDs per instance, override `WORKER_ID` per service in `compose.yaml` or use separate env configurations.
 
 ### Running Locally
 
-To start the entire application locally, simply execute the following command from the project root:
+Start the entire application from the project root:
 
 ```bash
 docker compose up --build -d
@@ -129,19 +171,19 @@ docker compose up --build -d
 
 This command builds the required Docker images and starts all services in detached mode.
 
-To check the running containers:
+Check the running containers:
 
 ```bash
 docker compose ps
 ```
 
-To inspect application logs:
+Inspect application logs:
 
 ```bash
 docker compose logs -f
 ```
 
-To stop all services:
+Stop all services:
 
 ```bash
 docker compose down
@@ -153,12 +195,21 @@ The project includes JavaScript-based load tests to evaluate API performance und
 
 The `test/` directory contains:
 
-- `read.js`: Tests URL redirection and retrieval performance.
+- `read.js`: Creates a short link and then tests redirection performance against it.
 - `write.js`: Tests URL creation performance.
 
-Run the tests from the `test/` directory using:
+> **Important:** the load tests hit a running instance of the application. Start the stack first with `docker compose up --build -d`.
+
+> **Rate limiting:** by default `POST /link/` allows `10/minute` and `GET /link/{code}` allows `120/minute`. High-concurrency load tests will quickly hit these limits and report HTTP `429` responses. To measure real throughput, raise `RATE_LIMIT_WRITE` and `RATE_LIMIT_READ` in `backend/.env` (for example `100000/minute`), then recreate the containers:
+>
+> ```bash
+> docker compose up -d --force-recreate
+> ```
+
+Install the dependencies from the `test/` directory:
 
 ```bash
+cd test
 npm install
 ```
 
@@ -170,6 +221,30 @@ npm run test:read
 
 ```bash
 npm run test:write
+```
+
+Both tests use `http://localhost` by default and accept the following environment variables:
+
+| Variable | Description | Default |
+|---|---|---|
+| `BASE_URL` | Base URL of the running application | `http://localhost` |
+| `DURATION` | Test duration in seconds | `15` |
+| `CONNECTIONS` | Number of concurrent connections | `20` |
+| `SHORT_LINK` | Existing short link to reuse in `read.js` (skips link creation) | *(creates a new one)* |
+| `EXPECTED_STATUS` | HTTP status treated as a successful redirect in `read.js` | `301` |
+
+> In `read.js`, a **301** redirect is considered the expected/successful response, since that is what the redirect endpoint returns. The script reports the status code breakdown and the percentage of successful redirects. If no `301` responses are received, it exits with a non-zero code.
+
+Example:
+
+```bash
+BASE_URL=http://localhost DURATION=30 CONNECTIONS=50 npm run test:read
+```
+
+If `read.js` fails with `HTTP 429` while creating the short link, the `POST /link/` rate limit was exhausted (for example after running `write.js`). Wait about a minute, raise `RATE_LIMIT_WRITE`, or reuse an existing link:
+
+```bash
+SHORT_LINK=/link/dJ8zv npm run test:read
 ```
 
 ## 🧩 API Documentation

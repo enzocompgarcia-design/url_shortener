@@ -23,6 +23,10 @@ backend = "backend:main"
 [tool.ruff.lint]
 ignore = ["B008", "TRY201"]
 
+[tool.uv.build-backend]
+module-name = "app"
+namespace = true
+
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
