@@ -16,3 +16,13 @@ node_modules/
 
 # env files
 .env
+.env.*
+*.env
+*.env.*
+.envrc
+backend/.env
+backend/.env.*
+**/.env
+**/.env.*
+**/*.env
+**/*.env.*
