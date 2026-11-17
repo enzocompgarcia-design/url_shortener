@@ -8,19 +8,12 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "asyncpg>=0.32.0",
     "cassandra-driver>=3.30.1",
-    "dotenv>=0.9.9",
     "fastapi[standard]>=0.143.0",
     "hashids>=1.3.1",
-    "hashidstr>=1.3.3",
-    "httpx2>=2.13.1",
-    "logger>=1.4",
-    "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
     "redis>=8.1.0",
     "slowapi>=0.1.10",
-    "sqlalchemy[asyncio]>=2.1.4",
     "tldextract>=5.4.0",
 ]
 
