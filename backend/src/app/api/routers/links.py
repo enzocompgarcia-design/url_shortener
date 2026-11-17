@@ -4,6 +4,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.dependencies import get_shorten_link_service
+from app.config import config
 from app.schemas.links import CreatShortLinkRequest, CreatShortLinkResponse
 from app.services.shorten_url_service import ShortenLinkService
 
@@ -16,7 +17,7 @@ limiter = Limiter(
 
 
 @shorten_link_router.post("/", response_model=CreatShortLinkResponse)
-@limiter.limit("10/minute")
+@limiter.limit(config.RATE_LIMIT_WRITE)
 async def shorten_link(
     create_short_link: CreatShortLinkRequest,
     request: Request,
@@ -30,7 +31,7 @@ async def shorten_link(
 
 
 @shorten_link_router.get("/{short_link}")
-@limiter.limit("120/minute")
+@limiter.limit(config.RATE_LIMIT_READ)
 async def redirect_link(
     short_link: str,
     request: Request,

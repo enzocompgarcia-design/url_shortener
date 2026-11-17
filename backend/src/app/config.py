@@ -24,6 +24,9 @@ class Config(BaseSettings):
     ALLOWED_PROTOCOLS: list[str] = ["http", "https"]
     DEFAULT_PROTOCOL: str = "https"
 
+    RATE_LIMIT_WRITE: str = "10/minute"
+    RATE_LIMIT_READ: str = "120/minute"
+
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
     )
