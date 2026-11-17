@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 
 import tldextract
 
-from app.database.cassandra.models import LinksTableDb
+from app.config import config
 from app.errors.exceptions import InvalidLongLink
 from app.repositories.link_repository import LinksRepository
 
@@ -16,18 +16,15 @@ class ShortenLinkService:
 
     async def shorten_link(
         self,
-        actual_url,
         short_link,
-        request,
-    ) -> LinksTableDb:
+        long_link,
+    ) -> str:
 
-        request.long_link = ShortenLinkService.validate_long_link(request.long_link)
+        long_link = ShortenLinkService.validate_long_link(long_link)
 
-        await self.link_repository.add_link(short_link=short_link, long_link=request.long_link)
+        await self.link_repository.add_link(short_link=short_link, long_link=long_link)
 
-        short_link = actual_url + str(short_link)
-
-        return short_link
+        return str(short_link)
 
     async def redirect_link(self, short_link: str):
         return await self.link_repository.get_long_link(short_link)
@@ -37,16 +34,21 @@ class ShortenLinkService:
         link = link_original.strip()
 
         if not link or any(char.isspace() for char in link):
-            raise InvalidLongLink(link)
+            raise InvalidLongLink(link_original)
 
-        if "://" not in link:
-            link = f"https://{link}"
+        if "://" in link:
+            scheme = urlparse(link).scheme.lower()
+
+            if scheme not in config.ALLOWED_PROTOCOLS:
+                raise InvalidLongLink(link_original)
+        else:
+            link = f"{config.DEFAULT_PROTOCOL}://{link}"
 
         try:
             url = urlparse(link)
 
             if not url.hostname:
-                raise InvalidLongLink(link)
+                raise InvalidLongLink(link_original)
 
             _ = url.port
 
@@ -56,6 +58,6 @@ class ShortenLinkService:
         extracted = tldextract.extract(url.hostname)
 
         if not (extracted.domain and extracted.suffix):
-            raise InvalidLongLink(link)
+            raise InvalidLongLink(link_original)
 
         return link
