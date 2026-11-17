@@ -22,11 +22,9 @@ async def shorten_link(
     request: Request,
     service: ShortenLinkService = Depends(get_shorten_link_service),
 ):
-    short_link = await service.shorten_link(
-        str(request.url),
-        request.app.state.id_generator.generate(),
-        create_short_link,
-    )
+    short_code = request.app.state.id_generator.generate()
+    short_link = await service.shorten_link(short_code, create_short_link.long_link)
+    short_link = str(request.url) + short_link
 
     return {"short_link": short_link}
 
