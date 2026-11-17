@@ -32,7 +32,3 @@ def create_tables():
     )
 
     sync_table(LinksTableDb)
-
-
-def get_db():
-    yield connection

@@ -1,5 +1,4 @@
 from redis import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
 from app.config import config
@@ -8,8 +7,7 @@ from app.errors.exceptions import LongLinkNotFound
 
 
 class LinksRepository:
-    def __init__(self, db: AsyncSession, cache: Redis):
-        self.db = db
+    def __init__(self, cache: Redis):
         self.cache = cache
 
     async def add_link(self, short_link: str, long_link: str):
@@ -25,7 +23,7 @@ class LinksRepository:
         return link
 
     async def get_long_link(self, short_link: str):
-        # Cache hit: não consulta o PostgreSQL.
+        # Cache hit: skips the database query.
         long_link = await self.cache.get(short_link)
 
         if long_link:
@@ -36,8 +34,7 @@ class LinksRepository:
         )
 
         if link is None:
-            raise LongLinkNotFound()
+            raise LongLinkNotFound(short_link)
 
         await self.cache.set(short_link, link.long_link, ex=3600)
-
         return link.long_link
