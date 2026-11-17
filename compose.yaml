@@ -2,7 +2,7 @@ services:
   frontend:
     build: 
       context: ./frontend
-      dockerfile: DockerFile
+      dockerfile: Dockerfile
     restart: unless-stopped
 
   nginx:
@@ -21,7 +21,7 @@ services:
   api1:
     build:
       context: ./backend
-      dockerfile: DockerFile
+      dockerfile: Dockerfile
     env_file:
       - ./backend/.env
     environment:
@@ -38,7 +38,7 @@ services:
   api2:
       build:
         context: ./backend
-        dockerfile: DockerFile
+        dockerfile: Dockerfile
       env_file:
         - ./backend/.env
       environment:
@@ -55,7 +55,7 @@ services:
   api3:
       build:
         context: ./backend
-        dockerfile: DockerFile
+        dockerfile: Dockerfile
       env_file:
         - ./backend/.env
       environment:
