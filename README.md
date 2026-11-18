@@ -34,13 +34,9 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 ├── .env.example
 ├── compose.yaml
 ├── backend/
-<<<<<<< HEAD
-│   ├── .env.example
-=======
 │   ├── .dockerignore
 │   ├── .env.example
 │   ├── .python-version
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 │   ├── Dockerfile
 │   ├── README.md
 │   ├── pyproject.toml
@@ -71,14 +67,6 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │   │       └── main.py
 │   └── tests/
 │       ├── api/
-<<<<<<< HEAD
-│       │   └── test_links_api.py
-│       └── unit/
-│           └── test_url_validator.py
-│
-├── frontend/
-│   ├── Dockerfile
-=======
 │       │   ├── test_dependency_errors.py
 │       │   ├── test_health.py
 │       │   └── test_links_api.py
@@ -87,7 +75,6 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │           └── test_url_validator.py
 │
 ├── frontend/
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 │   ├── index.html
 │   ├── css/
 │   │   └── style.css
@@ -100,10 +87,7 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │
 └── test/
     ├── package.json
-<<<<<<< HEAD
-=======
     ├── package-lock.json
->>>>>>> 07882f2 (docs: add and refactor project documentation)
     ├── read.js
     └── write.js
 ```
@@ -158,30 +142,18 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-<<<<<<< HEAD
-Then update the values as needed (especially secrets/passwords).
-=======
 Then update the values as needed (especially secrets/passwords). `REDIS_PASSWORD` is mandatory: `docker compose` refuses to start Redis if it is missing or empty.
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 #### Root `.env` (Docker Compose)
 
 | Variable | Description | Example |
 |---|---|---|
-<<<<<<< HEAD
-| `REDIS_PASSWORD` | Password for the Redis container (used by `compose.yaml`) | `change_me_redis_password` |
-=======
 | `REDIS_PASSWORD` | **Required** password for Redis; `docker compose` fails if unset or empty | `change_me_redis_password` |
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 #### `backend/.env` (API)
 
 | Variable | Description | Example |
 |---|---|---|
-<<<<<<< HEAD
-| `WORKER_ID` | Unique worker identifier for the API instance (integer) | `1` |
-=======
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 | `CASSANDRA_HOST` | Cassandra hostname/service name | `cassandra` |
 | `CASSANDRA_PORT` | Cassandra port | `9042` |
 | `REDIS_URL` | Redis connection URL (password must match `REDIS_PASSWORD`) | `redis://:change_me_redis_password@redis:6379/0` |
@@ -192,13 +164,8 @@ Then update the values as needed (especially secrets/passwords). `REDIS_PASSWORD
 | `ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost"]` |
 | `RATE_LIMIT_WRITE` | Rate limit for `POST /link/` (slowapi format) | `10/minute` |
 | `RATE_LIMIT_READ` | Rate limit for `GET /link/{code}` (slowapi format) | `120/minute` |
-<<<<<<< HEAD
-
-> **Note:** `compose.yaml` starts multiple API instances (`api1`, `api2`, `api3`) that share the same `backend/.env`. If you need distinct worker IDs per instance, override `WORKER_ID` per service in `compose.yaml` or use separate env configurations.
-=======
 | `CACHE_CHECK_TIMEOUT` | Timeout in seconds for the Redis ping in `/ready` | `2.0` |
 | `DATABASE_CHECK_TIMEOUT` | Timeout in seconds for the Cassandra check in `/ready` | `2.0` |
->>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 ### Running Locally
 
