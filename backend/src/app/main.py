@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routers.health import health_router
 from app.api.routers.links import shorten_link_router
 from app.config import config
 from app.core.id_generator import IDGenerator
@@ -36,3 +37,4 @@ app.add_middleware(
 register_exception_handlers(app)
 
 app.include_router(shorten_link_router)
+app.include_router(health_router)

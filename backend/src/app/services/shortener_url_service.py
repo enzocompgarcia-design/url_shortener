@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 import tldextract
 
 from app.config import config
-from app.errors.exceptions import InvalidLongLink
+from app.errors.exceptions import InvalidLongLink, InvalidProtocol
 from app.repositories.link_repository import LinksRepository
 
 
@@ -40,7 +40,7 @@ class ShortenLinkService:
             scheme = urlparse(link).scheme.lower()
 
             if scheme not in config.ALLOWED_PROTOCOLS:
-                raise InvalidLongLink(link_original)
+                raise InvalidProtocol(scheme)
         else:
             link = f"{config.DEFAULT_PROTOCOL}://{link}"
 

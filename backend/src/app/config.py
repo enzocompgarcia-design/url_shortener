@@ -6,8 +6,6 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 
 class Config(BaseSettings):
-    WORKER_ID: int
-
     CASSANDRA_HOST: str
     CASSANDRA_PORT: int
     CASSANDRA_TTL_10_YEARS: int = 10 * 365 * 24 * 60 * 60
@@ -26,6 +24,9 @@ class Config(BaseSettings):
 
     RATE_LIMIT_WRITE: str = "10/minute"
     RATE_LIMIT_READ: str = "120/minute"
+
+    CACHE_CHECK_TIMEOUT: float = 2.0
+    DATABASE_CHECK_TIMEOUT: float = 2.0
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
