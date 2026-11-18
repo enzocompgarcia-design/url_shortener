@@ -11,7 +11,7 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 - **Load Balancing:** Nginx distributes incoming requests across multiple API instances.
 - **Rate Limiting:** Protect the API against excessive requests.
 - **Containerization:** Docker-based environment for easier deployment and scalability.
-- **Automated Tests:** Unit tests for URL validation and rate limiting.
+- **Automated Tests:** Unit and API tests for URL validation, dependency failures and health checks.
 
 ## 🛠️ Technologies
 
@@ -34,7 +34,13 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 ├── .env.example
 ├── compose.yaml
 ├── backend/
+<<<<<<< HEAD
 │   ├── .env.example
+=======
+│   ├── .dockerignore
+│   ├── .env.example
+│   ├── .python-version
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 │   ├── Dockerfile
 │   ├── README.md
 │   ├── pyproject.toml
@@ -44,6 +50,7 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │   │       ├── api/
 │   │       │   ├── dependencies.py
 │   │       │   └── routers/
+│   │       │       ├── health.py
 │   │       │       └── links.py
 │   │       ├── core/
 │   │       │   └── id_generator.py
@@ -58,17 +65,29 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │   │       ├── schemas/
 │   │       │   └── links.py
 │   │       ├── services/
-│   │       │   └── shorten_url_service.py
+│   │       │   ├── healthy_service.py
+│   │       │   └── shortener_url_service.py
 │   │       ├── config.py
 │   │       └── main.py
 │   └── tests/
 │       ├── api/
+<<<<<<< HEAD
 │       │   └── test_links_api.py
 │       └── unit/
 │           └── test_url_validator.py
 │
 ├── frontend/
 │   ├── Dockerfile
+=======
+│       │   ├── test_dependency_errors.py
+│       │   ├── test_health.py
+│       │   └── test_links_api.py
+│       └── unit/
+│           ├── test_dependency_handling.py
+│           └── test_url_validator.py
+│
+├── frontend/
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 │   ├── index.html
 │   ├── css/
 │   │   └── style.css
@@ -81,6 +100,10 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 │
 └── test/
     ├── package.json
+<<<<<<< HEAD
+=======
+    ├── package-lock.json
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
     ├── read.js
     └── write.js
 ```
@@ -94,7 +117,7 @@ The application follows a modular architecture, separating responsibilities betw
 Built with FastAPI, the backend is organized into different layers:
 
 - **API:** Handles HTTP requests and exposes the application endpoints.
-- **Services:** Contains the business logic for shortening URLs.
+- **Services:** Contains the business logic for shortening URLs and for checking dependency health/readiness (`healthy_service.py`).
 - **Repositories:** Responsible for data access operations.
 - **Database:** Manages connections to Cassandra and Redis.
 - **Core:** Contains the ID generator.
@@ -110,7 +133,7 @@ Built with FastAPI, the backend is organized into different layers:
 
 ### Frontend
 
-A lightweight interface built with HTML, CSS, and JavaScript that allows users to submit long URLs and retrieve their shortened versions.
+A lightweight interface built with HTML, CSS, and JavaScript that allows users to submit long URLs and retrieve their shortened versions. Nginx serves these static files directly from `frontend/`; there is no separate frontend container.
 
 ## ⚡ Getting Started
 
@@ -135,19 +158,30 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
+<<<<<<< HEAD
 Then update the values as needed (especially secrets/passwords).
+=======
+Then update the values as needed (especially secrets/passwords). `REDIS_PASSWORD` is mandatory: `docker compose` refuses to start Redis if it is missing or empty.
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 #### Root `.env` (Docker Compose)
 
 | Variable | Description | Example |
 |---|---|---|
+<<<<<<< HEAD
 | `REDIS_PASSWORD` | Password for the Redis container (used by `compose.yaml`) | `change_me_redis_password` |
+=======
+| `REDIS_PASSWORD` | **Required** password for Redis; `docker compose` fails if unset or empty | `change_me_redis_password` |
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 #### `backend/.env` (API)
 
 | Variable | Description | Example |
 |---|---|---|
+<<<<<<< HEAD
 | `WORKER_ID` | Unique worker identifier for the API instance (integer) | `1` |
+=======
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 | `CASSANDRA_HOST` | Cassandra hostname/service name | `cassandra` |
 | `CASSANDRA_PORT` | Cassandra port | `9042` |
 | `REDIS_URL` | Redis connection URL (password must match `REDIS_PASSWORD`) | `redis://:change_me_redis_password@redis:6379/0` |
@@ -158,8 +192,13 @@ Then update the values as needed (especially secrets/passwords).
 | `ORIGINS` | Allowed CORS origins (JSON array) | `["http://localhost"]` |
 | `RATE_LIMIT_WRITE` | Rate limit for `POST /link/` (slowapi format) | `10/minute` |
 | `RATE_LIMIT_READ` | Rate limit for `GET /link/{code}` (slowapi format) | `120/minute` |
+<<<<<<< HEAD
 
 > **Note:** `compose.yaml` starts multiple API instances (`api1`, `api2`, `api3`) that share the same `backend/.env`. If you need distinct worker IDs per instance, override `WORKER_ID` per service in `compose.yaml` or use separate env configurations.
+=======
+| `CACHE_CHECK_TIMEOUT` | Timeout in seconds for the Redis ping in `/ready` | `2.0` |
+| `DATABASE_CHECK_TIMEOUT` | Timeout in seconds for the Cassandra check in `/ready` | `2.0` |
+>>>>>>> 07882f2 (docs: add and refactor project documentation)
 
 ### Running Locally
 
@@ -255,6 +294,15 @@ Once the application is running, access:
 
 - Swagger UI: `http://localhost/docs`
 - ReDoc: `http://localhost/redoc`
+
+### Health checks
+
+Each API instance also exposes two endpoints hidden from the OpenAPI schema:
+
+- `GET /health`: liveness probe; returns `200 {"status": "ok"}`.
+- `GET /ready`: checks Redis and Cassandra; returns `200 {"status": "ok"}` when both respond, or `503` with `detail` and `error_code` from the global exception handler. Docker Compose uses this endpoint for the API healthchecks.
+
+Nginx does not proxy these paths (port 80 requests fall back to the frontend), so call them directly on an API instance, e.g. `http://localhost:8000/ready` when running the API locally.
 
 *The actual access URL depends on the Nginx configuration.*
 
