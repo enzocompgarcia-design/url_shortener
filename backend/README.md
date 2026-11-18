@@ -5,10 +5,6 @@ create short links, redirect to the original URLs and report dependency
 health/readiness (`/health`, `/ready`), using Cassandra for persistence and
 Redis for caching and ID generation.
 
-> This README is also referenced by `readme = "README.md"` in `pyproject.toml`.
-> Keep it in place so `uv sync`/`uv build` do not fail with a missing README
-> error.
-
 ## Requirements
 
 - [uv](https://docs.astral.sh/uv/) (Python package and project manager)
@@ -42,13 +38,7 @@ uv sync --frozen
 
 # Install only production dependencies (skip the dev group)
 uv sync --no-dev
-
-# Recreate the environment from scratch
-rm -rf .venv && uv sync
 ```
-
-> The Docker image uses `uv sync --frozen --no-install-project` because the
-> source code is copied afterwards and the app runs from `src/`.
 
 ## Configuration
 
@@ -68,23 +58,6 @@ need to activate `.venv` manually. If you prefer, you can still activate it:
 ```bash
 source .venv/bin/activate
 ```
-
-The API will be available at `http://localhost:8000` (Swagger UI at `/docs`).
-Cassandra and Redis must be reachable using the hosts/URLs set in `.env`; the
-easiest way to start them is `docker compose up -d redis cassandra` from the
-project root. The root `.env` must exist with `REDIS_PASSWORD` set before running
-that command, otherwise Compose refuses to start Redis.
-
-## Running the API
-
-From `backend/`, with Cassandra and Redis reachable:
-
-```bash
-uv run uvicorn app.main:app --app-dir src --reload
-```
-
-The `--app-dir src` flag is required so `app.*` imports resolve. `/health` and
-`/ready` are available on port 8000 but are not proxied by Nginx.
 
 ## Tests
 
@@ -107,6 +80,3 @@ uv remove <package>
 # Update the lock file (and installed packages)
 uv lock --upgrade
 ```
-
-`uv add`/`uv remove` update both `pyproject.toml` and `uv.lock`, so commit both
-files together.

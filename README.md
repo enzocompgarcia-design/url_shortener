@@ -27,71 +27,6 @@ A URL Shortener built with **FastAPI**, designed to create short links from long
 | HTML / CSS | Frontend interface |
 | Pytest | Backend testing |
 
-## 📁 Project Structure
-
-```text
-.
-├── .env.example
-├── compose.yaml
-├── backend/
-│   ├── .dockerignore
-│   ├── .env.example
-│   ├── .python-version
-│   ├── Dockerfile
-│   ├── README.md
-│   ├── pyproject.toml
-│   ├── uv.lock
-│   ├── src/
-│   │   └── app/
-│   │       ├── api/
-│   │       │   ├── dependencies.py
-│   │       │   └── routers/
-│   │       │       ├── health.py
-│   │       │       └── links.py
-│   │       ├── core/
-│   │       │   └── id_generator.py
-│   │       ├── database/
-│   │       │   ├── cache/
-│   │       │   └── cassandra/
-│   │       ├── errors/
-│   │       │   ├── exceptions.py
-│   │       │   └── handlers.py
-│   │       ├── repositories/
-│   │       │   └── link_repository.py
-│   │       ├── schemas/
-│   │       │   └── links.py
-│   │       ├── services/
-│   │       │   ├── healthy_service.py
-│   │       │   └── shortener_url_service.py
-│   │       ├── config.py
-│   │       └── main.py
-│   └── tests/
-│       ├── api/
-│       │   ├── test_dependency_errors.py
-│       │   ├── test_health.py
-│       │   └── test_links_api.py
-│       └── unit/
-│           ├── test_dependency_handling.py
-│           └── test_url_validator.py
-│
-├── frontend/
-│   ├── index.html
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   └── script.js
-│   └── package.json
-│
-├── nginx/
-│   └── default.conf
-│
-└── test/
-    ├── package.json
-    ├── package-lock.json
-    ├── read.js
-    └── write.js
-```
-
 ## 🏗️ Architecture
 
 The application follows a modular architecture, separating responsibilities between the frontend, backend, databases, and infrastructure.
@@ -101,7 +36,7 @@ The application follows a modular architecture, separating responsibilities betw
 Built with FastAPI, the backend is organized into different layers:
 
 - **API:** Handles HTTP requests and exposes the application endpoints.
-- **Services:** Contains the business logic for shortening URLs and for checking dependency health/readiness (`healthy_service.py`).
+- **Services:** Contains the business logic for shortening URLs and for checking dependency health/readiness.
 - **Repositories:** Responsible for data access operations.
 - **Database:** Manages connections to Cassandra and Redis.
 - **Core:** Contains the ID generator.
@@ -117,7 +52,7 @@ Built with FastAPI, the backend is organized into different layers:
 
 ### Frontend
 
-A lightweight interface built with HTML, CSS, and JavaScript that allows users to submit long URLs and retrieve their shortened versions. Nginx serves these static files directly from `frontend/`; there is no separate frontend container.
+A lightweight interface built with HTML, CSS, and JavaScript that allows users to submit long URLs and retrieve their shortened versions. Nginx serves these static files directly from `frontend/`.
 
 ## ⚡ Getting Started
 
@@ -142,7 +77,7 @@ cp .env.example .env
 cp backend/.env.example backend/.env
 ```
 
-Then update the values as needed (especially secrets/passwords). `REDIS_PASSWORD` is mandatory: `docker compose` refuses to start Redis if it is missing or empty.
+Then update the values as needed (especially secrets/passwords).
 
 #### Root `.env` (Docker Compose)
 
@@ -229,30 +164,6 @@ npm run test:read
 npm run test:write
 ```
 
-Both tests use `http://localhost` by default and accept the following environment variables:
-
-| Variable | Description | Default |
-|---|---|---|
-| `BASE_URL` | Base URL of the running application | `http://localhost` |
-| `DURATION` | Test duration in seconds | `15` |
-| `CONNECTIONS` | Number of concurrent connections | `20` |
-| `SHORT_LINK` | Existing short link to reuse in `read.js` (skips link creation) | *(creates a new one)* |
-| `EXPECTED_STATUS` | HTTP status treated as a successful redirect in `read.js` | `301` |
-
-> In `read.js`, a **301** redirect is considered the expected/successful response, since that is what the redirect endpoint returns. The script reports the status code breakdown and the percentage of successful redirects. If no `301` responses are received, it exits with a non-zero code.
-
-Example:
-
-```bash
-BASE_URL=http://localhost DURATION=30 CONNECTIONS=50 npm run test:read
-```
-
-If `read.js` fails with `HTTP 429` while creating the short link, the `POST /link/` rate limit was exhausted (for example after running `write.js`). Wait about a minute, raise `RATE_LIMIT_WRITE`, or reuse an existing link:
-
-```bash
-SHORT_LINK=/link/dJ8zv npm run test:read
-```
-
 ## 🧩 API Documentation
 
 FastAPI automatically generates interactive API documentation.
@@ -270,8 +181,6 @@ Each API instance also exposes two endpoints hidden from the OpenAPI schema:
 - `GET /ready`: checks Redis and Cassandra; returns `200 {"status": "ok"}` when both respond, or `503` with `detail` and `error_code` from the global exception handler. Docker Compose uses this endpoint for the API healthchecks.
 
 Nginx does not proxy these paths (port 80 requests fall back to the frontend), so call them directly on an API instance, e.g. `http://localhost:8000/ready` when running the API locally.
-
-*The actual access URL depends on the Nginx configuration.*
 
 ## 📌 Future Improvements
 
