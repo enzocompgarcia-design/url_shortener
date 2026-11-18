@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-backend = "backend:main"
+backend = "src.app:main"
 
 [tool.ruff.lint]
 ignore = ["B008", "TRY201"]
