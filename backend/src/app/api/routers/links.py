@@ -6,7 +6,7 @@ from slowapi.util import get_remote_address
 from app.api.dependencies import get_shorten_link_service
 from app.config import config
 from app.schemas.links import CreatShortLinkRequest, CreatShortLinkResponse
-from app.services.shorten_url_service import ShortenLinkService
+from app.services.shortener_url_service import ShortenLinkService
 
 shorten_link_router = APIRouter(prefix="/link")
 
