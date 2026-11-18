@@ -6,7 +6,6 @@ def test_create_short_link_returns_short_url(client, mock_link_repository):
 
     response = client.post("/link/", json=payload)
 
-    print(response.json())
     assert response.status_code == status.HTTP_200_OK
     mock_link_repository["add_link"].assert_awaited_once()
 
@@ -16,9 +15,9 @@ def test_create_short_link_rejects_invalid_protocol(client):
 
     response = client.post("/link/", json=payload)
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_406_NOT_ACCEPTABLE
     body = response.json()
-    assert body["error_code"] == "invalid_long_link"
+    assert body["error_code"] == "invalid_protocol"
 
 
 def test_redirect_link_returns_long_url(client, mock_link_repository):

@@ -1,7 +1,7 @@
 import pytest
 
-from app.errors.exceptions import InvalidLongLink
-from app.services.shorten_url_service import ShortenLinkService
+from app.errors.exceptions import InvalidLongLink, InvalidProtocol
+from app.services.shortener_url_service import ShortenLinkService
 
 
 @pytest.mark.parametrize(
@@ -18,18 +18,18 @@ def test_validate_valid_urls(url, expected):
 
 
 @pytest.mark.parametrize(
-    "url",
+    ("url", "expected_exception"),
     [
-        "",
-        "   ",
-        "invalid url",
-        "http://",
-        "ftp://example.com",
-        "javascript:alert(1)",
-        "https://",
-        "http://exa mple.com",
+        ("", InvalidLongLink),
+        ("   ", InvalidLongLink),
+        ("invalid url", InvalidLongLink),
+        ("http://", InvalidLongLink),
+        ("ftp://example.com", InvalidProtocol),
+        ("javascript:alert(1)", InvalidLongLink),
+        ("https://", InvalidLongLink),
+        ("http://exa mple.com", InvalidLongLink),
     ],
 )
-def test_validate_invalid_urls(url):
-    with pytest.raises(InvalidLongLink):
+def test_validate_invalid_urls(url, expected_exception):
+    with pytest.raises(expected_exception):
         ShortenLinkService.validate_long_link(url)
