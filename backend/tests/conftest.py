@@ -12,7 +12,6 @@ if str(BACKEND_SRC) not in sys.path:
     sys.path.insert(0, str(BACKEND_SRC))
 
 # Minimal variables required to load app.config in the test environment
-os.environ.setdefault("WORKER_ID", "1")
 os.environ.setdefault("CASSANDRA_HOST", "localhost")
 os.environ.setdefault("CASSANDRA_PORT", "9042")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
@@ -75,7 +74,7 @@ def client(monkeypatch, fake_cache, fake_id_generator, mock_link_repository):
     import app.main as main_module
     from app.api.dependencies import get_shorten_link_service
     from app.repositories.link_repository import LinksRepository
-    from app.services.shorten_url_service import ShortenLinkService
+    from app.services.shortener_url_service import ShortenLinkService
 
     async def noop_async(*args, **kwargs):
         return None
