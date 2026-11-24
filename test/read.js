@@ -1,53 +1,14 @@
-const autocannon = require("autocannon");
+import { createShortLink, formatAutocannonResult } from "./util.js";
+import autocannon from "autocannon";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost";
-const DURATION = Number(process.env.DURATION || 15);
-const CONNECTIONS = Number(process.env.CONNECTIONS || 20);
-const TARGET_URL = "https://example.com";
-// Optional: reuse an existing short link instead of creating a new one.
-// Accepts a full URL (http://localhost/link/abc123) or just a path (/link/abc123).
-const SHORT_LINK = process.env.SHORT_LINK;
-// The read endpoint redirects with 301, so that is the successful response.
-const EXPECTED_STATUS = Number(process.env.EXPECTED_STATUS || 301);
+const DURATION = 15;
+const CONNECTIONS = 20;
+const EXPECTED_STATUS = 301;
 
-function toPath(value) {
-  return value.startsWith("http") ? new URL(value).pathname : value;
-}
-
-async function createShortLink() {
-  const response = await fetch(`${BASE_URL}/link/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ long_link: TARGET_URL }),
-  });
-
-  if (response.status === 429) {
-    throw new Error(
-      "Rate limit reached while creating a short link (HTTP 429). " +
-        "The POST /link/ endpoint is limited by RATE_LIMIT_WRITE (default: 10/minute). " +
-        "Wait about 60 seconds and try again, raise RATE_LIMIT_WRITE in backend/.env " +
-        "and recreate the containers, or pass SHORT_LINK=/link/<code> to reuse an existing link.",
-    );
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to create a short link (HTTP ${response.status}). Is the stack running?`,
-    );
-  }
-
-  const data = await response.json();
-
-  console.log(`Created short link: ${data.short_link}`);
-  return toPath(data.short_link);
-}
-
-function getStatusCodeStats(result) {
-  return result.statusCodeStats || {};
-}
+const BASE_URL = "http://localhost";
 
 function printStatusSummary(result) {
-  const stats = getStatusCodeStats(result);
+  const stats = result.statusCodeStats;
   const total = Object.values(stats).reduce((sum, item) => sum + item.count, 0);
   const expected = stats[EXPECTED_STATUS]?.count || 0;
   const expectedRate = total > 0 ? (expected / total) * 100 : 0;
@@ -68,7 +29,7 @@ function printStatusSummary(result) {
 }
 
 function printHints(result) {
-  const stats = getStatusCodeStats(result);
+  const stats = result.statusCodeStats;
   const tooManyRequests = stats[429]?.count || 0;
   const notFound = stats[404]?.count || 0;
 
@@ -87,17 +48,6 @@ function printHints(result) {
   }
 }
 
-// autocannon only treats 2xx as successful, which is misleading for this API:
-// the expected response here is a 301 redirect. We print the tables ourselves
-// and drop the "0 2xx responses, N non 2xx responses" line.
-function formatAutocannonResult(result) {
-  return autocannon
-    .printResult(result)
-    .split("\n")
-    .filter((line) => !/2xx responses,.*non 2xx responses/.test(line))
-    .join("\n");
-}
-
 function runReadLoadTest(path) {
   const instance = autocannon({
     url: `${BASE_URL}${path}`,
@@ -109,7 +59,7 @@ function runReadLoadTest(path) {
   instance.on("done", (result) => {
     const { total, expected } = printStatusSummary(result);
 
-    console.log(formatAutocannonResult(result));
+    console.log(formatAutocannonResult(autocannon, result));
     printHints(result);
 
     if (total === 0) {
@@ -122,18 +72,16 @@ function runReadLoadTest(path) {
       process.exitCode = 1;
     }
   });
-
-  autocannon.track(instance, {
-    renderProgressBar: false,
-    renderResultsTable: false,
-  });
 }
 
 (async () => {
   try {
-    const path = SHORT_LINK ? toPath(SHORT_LINK) : await createShortLink();
+    const path = await createShortLink();
+
     console.log(`Running read load test against ${BASE_URL}${path} ...`);
+
     runReadLoadTest(path);
+
   } catch (error) {
     console.error(`\nError: ${error.message}`);
     console.error(

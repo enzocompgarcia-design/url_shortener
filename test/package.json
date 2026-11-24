@@ -1,12 +1,15 @@
+
 {
   "name": "load_tests",
   "version": "1.0.0",
+  "type": "module",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:write": "node write.js",
-    "test:read": "node read.js"
+    "test:read": "node read.js",
+    "test:hybrid": "node hybrid.js"
   },
   "author": "",
   "license": "ISC",

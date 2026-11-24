@@ -1,8 +1,8 @@
-const autocannon = require("autocannon");
+import autocannon from "autocannon";
 
-const BASE_URL = process.env.BASE_URL || "http://localhost";
-const DURATION = Number(process.env.DURATION || 15);
-const CONNECTIONS = Number(process.env.CONNECTIONS || 20);
+const BASE_URL = "http://localhost";
+const DURATION = 15;
+const CONNECTIONS = 20;
 const TARGET_URL = "https://example.com";
 
 const statusCounts = {};
