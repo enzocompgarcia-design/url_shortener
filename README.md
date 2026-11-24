@@ -138,6 +138,7 @@ The `test/` directory contains:
 
 - `read.js`: Creates a short link and then tests redirection performance against it.
 - `write.js`: Tests URL creation performance.
+- `hybrid.js`: Tests URL redirection with 80% valid and 20% invalid links
 
 > **Important:** the load tests hit a running instance of the application. Start the stack first with `docker compose up --build -d`.
 
@@ -158,10 +159,8 @@ Then execute the desired test:
 
 ```bash
 npm run test:read
-```
-
-```bash
 npm run test:write
+npm run test:hybrid
 ```
 
 ## 🧩 API Documentation
